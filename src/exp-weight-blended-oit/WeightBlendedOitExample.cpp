@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <stdio.h>
+
 #include <vermilion.h>
 
 #include "vapp.h"
@@ -6,7 +9,6 @@
 
 #include "vmath.h"
 
-#include <stdio.h>
 
 #include "WeightBlendedOitExample.h"
 
@@ -34,6 +36,17 @@ void WeightBlendedOitExample::Initialize(const char * title)
     // Create test scene objects.
     scene_creator.CreateOpaqueObjects(opaque_objects);
     scene_creator.CreateTranslucentObjects(translucent_objects);
+
+    // Setup camera pose.
+    eye_pos[0] = .0f;
+    eye_pos[1] = 400.0f;
+    eye_pos[2] = 0.0f;
+    focal_point[0] = .0f;
+    focal_point[1] = .0f;
+    focal_point[2] = .0f;
+    view_up[0] = 1.0f;
+    view_up[1] = .0f;
+    view_up[2] = .0f;
 }
 
 bool WeightBlendedOitExample::CreateOpaqueProgram()
@@ -228,20 +241,7 @@ void WeightBlendedOitExample::Display(bool auto_redraw)
 {
     float time = float(app_time() & 0xFFFF) / float(0xFFFF);
 
-    vmath::vecN<float, 3> eye;
-    eye[0] = .0f;
-    eye[1] = 400.0f;
-    eye[2] = 0.0f;
-    vmath::vecN<float, 3> center;
-    center[0] = .0f;
-    center[1] = .0f;
-    center[2] = .0f;
-    vmath::vecN<float, 3> up;
-    up[0] = 1.0f;
-    up[1] = .0f;
-    up[2] = .0f;
-
-    view_matrix = vmath::lookat(eye, center, up);
+    view_matrix = vmath::lookat(eye_pos, focal_point, view_up);
     proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, 1000.0f);
 
     RenderOpaque(time * 0.5f);
@@ -252,6 +252,7 @@ void WeightBlendedOitExample::Display(bool auto_redraw)
             RenderOITQuad(time * 0.25f);
         }
         else {
+            SortBackToFront(translucent_objects);
             RenderTranslucent(time * 0.25f);
         }
     }
@@ -471,6 +472,27 @@ void WeightBlendedOitExample::Resize(int width, int height)
     CreateOITFrameBuffer();
 }
 
+void WeightBlendedOitExample::SortBackToFront(std::vector<std::shared_ptr<VBObjectExt>>& objects)
+{
+    std::sort(objects.begin(), objects.end(), [this](std::shared_ptr<VBObjectExt>& a, std::shared_ptr<VBObjectExt>& b) {
+        vmath::mat4 transA = a->GetTransform();
+        vmath::vecN<float, 3> posA;
+        posA[0] = transA[3][0];
+        posA[1] = transA[3][1];
+        posA[2] = transA[3][2];
+        float disA = vmath::distance(eye_pos, posA);
+
+        vmath::mat4 transB = b->GetTransform();
+        vmath::vecN<float, 3> posB;
+        posB[0] = transB[3][0];
+        posB[1] = transB[3][1];
+        posB[2] = transB[3][2];
+        float disB = vmath::distance(eye_pos, posB);
+        
+        return disA > disB;
+    });
+}
+
 void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
 {
     if (action == GLFW_PRESS) {
@@ -481,18 +503,105 @@ void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
             case GLFW_KEY_T:
                 transparent_active = !transparent_active;
                 break;
-            case GLFW_KEY_1:
-                //oit_visualization_mode = 1;
+            case GLFW_KEY_S:
                 break;
-            case GLFW_KEY_2:
-                //oit_visualization_mode = 2;
+            case GLFW_KEY_A:
                 break;
-            case GLFW_KEY_3:
-                //oit_visualization_mode = 3;
+            case GLFW_KEY_L:
                 break;
             default:
                 break;
         }
+    }
+
+    if (action == GLFW_REPEAT) {
+        HandleCameraTransform(key);
+    }
+}
+
+void WeightBlendedOitExample::HandleCameraTransform(int key)
+{
+    switch (key) {
+        // Front
+        case GLFW_KEY_W:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                front = normalize(front);
+                vmath::vecN<float, 3> offset = front * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+        // Back
+        case GLFW_KEY_S:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                front = normalize(front);
+                vmath::vecN<float, 3> offset = -front * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+        // Left
+        case GLFW_KEY_A:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                front = normalize(front);
+                vmath::vecN<float, 3> right = vmath::cross(front, view_up);
+                right = normalize(right);
+                vmath::vecN<float, 3> offset = -right * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+        // Right
+        case GLFW_KEY_D:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                front = normalize(front);
+                vmath::vecN<float, 3> right = vmath::cross(front, view_up);
+                right = normalize(right);
+                vmath::vecN<float, 3> offset = right * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+
+        case GLFW_KEY_LEFT:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                auto rotateMatrix = vmath::rotate(-camera_rotate_speed, view_up);
+
+                vmath::vecN<float, 4> homoFront;
+                homoFront[0] = front[0];
+                homoFront[1] = front[1];
+                homoFront[2] = front[2];
+                homoFront[3] = 1.0;
+                auto result = homoFront * rotateMatrix;
+                focal_point[0] = eye_pos[0] + result[0];
+                focal_point[1] = eye_pos[1] + result[1];
+                focal_point[2] = eye_pos[2] + result[2];
+            }
+            break;
+
+        case GLFW_KEY_RIGHT:
+            {
+                vmath::vecN<float, 3> front = focal_point - eye_pos;
+                auto rotateMatrix = vmath::rotate(camera_rotate_speed, view_up);
+
+                vmath::vecN<float, 4> homoFront;
+                homoFront[0] = front[0];
+                homoFront[1] = front[1];
+                homoFront[2] = front[2];
+                homoFront[3] = 1.0;
+                auto result = homoFront * rotateMatrix;
+                focal_point[0] = eye_pos[0] + result[0];
+                focal_point[1] = eye_pos[1] + result[1];
+                focal_point[2] = eye_pos[2] + result[2];
+            }
+            break;
+        default:
+            break;
     }
 }
 
