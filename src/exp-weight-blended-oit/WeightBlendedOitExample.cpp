@@ -240,7 +240,7 @@ void WeightBlendedOitExample::Display(bool auto_redraw)
     unsigned deltaTime = cur_time - last_time;
 
     view_matrix = vmath::lookat(eye_pos, focal_point, view_up);
-    proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, 500.0f);
+    proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, far_plane_distance);
 
     RenderOpaque(deltaTime * 0.001f);
 
@@ -364,13 +364,16 @@ void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
 
     glUseProgram(oit_output_prog);
     
-    mv_mat_loc = glGetUniformLocation(translucent_prog, "model_matrix");
-    prj_mat_loc = glGetUniformLocation(translucent_prog, "proj_matrix");
-    col_amb_loc = glGetUniformLocation(translucent_prog, "color_ambient");
-    col_diff_loc = glGetUniformLocation(translucent_prog, "color_diffuse");
-    col_spec_loc = glGetUniformLocation(translucent_prog, "color_specular");
+    mv_mat_loc = glGetUniformLocation(oit_output_prog, "model_matrix");
+    prj_mat_loc = glGetUniformLocation(oit_output_prog, "proj_matrix");
+    col_amb_loc = glGetUniformLocation(oit_output_prog, "color_ambient");
+    col_diff_loc = glGetUniformLocation(oit_output_prog, "color_diffuse");
+    z_scalar_loc = glGetUniformLocation(oit_output_prog, "z_scalar");
 
     glUniformMatrix4fv(prj_mat_loc, 1, GL_FALSE, proj_matrix);
+    // The equation from McGuire & Bavoil is tuned for z range 0.1 <= |z| <= 500,
+    // so we should have a scalar to adapt that.
+    glUniform1f(z_scalar_loc, 500.0 / far_plane_distance);
 
     int count = 0;
     for (auto& object : translucent_objects) {

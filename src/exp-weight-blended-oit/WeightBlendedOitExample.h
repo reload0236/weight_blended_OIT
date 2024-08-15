@@ -73,6 +73,7 @@ private:
     GLint col_amb_loc{};
     GLint col_diff_loc{};
     GLint col_spec_loc{};
+    GLint z_scalar_loc{};
 
     vmath::mat4 view_matrix;
     vmath::mat4 proj_matrix;
@@ -82,6 +83,7 @@ private:
 
     SceneCreator scene_creator;
 
+    float far_plane_distance = 1000.0;
     vmath::vecN<float, 3> eye_pos;
     vmath::vecN<float, 3> focal_point;
     vmath::vecN<float, 3> view_up;
