@@ -36,6 +36,10 @@ protected:
     void RenderOITQuad(float time);
     void RenderViewQuad();
 
+    void SortBackToFront(std::vector<std::shared_ptr<VBObjectExt>>& objects);
+
+    void HandleCameraTransform(int key);
+
 private:
 
     // Main FBO and attachments.
@@ -78,6 +82,18 @@ private:
 
     SceneCreator scene_creator;
 
+    vmath::vecN<float, 3> eye_pos;
+    vmath::vecN<float, 3> focal_point;
+    vmath::vecN<float, 3> view_up;
+    float camera_move_speed = 10.0f;
+    float camera_rotate_speed = 3.0f;
+
+    int window_width = 800;
+    int window_height = 600;
+
+    bool oit_active = true;
+    bool transparent_active = true;
+
     static const std::string render_vs;
     static const std::string render_fs;
 
@@ -87,11 +103,5 @@ private:
     static const std::string oit_overlay_fs;
 
     static const std::string render_view_fs;
-
-    int window_width = 800;
-    int window_height = 600;
-
-    bool oit_active = true;
-    bool transparent_active = true;
 
 END_APP_DECLARATION()
