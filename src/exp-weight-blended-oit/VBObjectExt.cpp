@@ -21,7 +21,7 @@ bool VBObjectExt::Rotate(float angle, float vX, float vY, float vZ)
     vector[0] = vX;
     vector[1] = vY;
     vector[2] = vZ;
-    rotation_matrix = vmath::rotate(angle, vector);
+    rotation_matrix = vmath::rotate(angle, vector) * rotation_matrix;
 
     return true;
 }

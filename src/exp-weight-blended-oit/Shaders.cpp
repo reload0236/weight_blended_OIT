@@ -63,10 +63,10 @@ const std::string WeightBlendedOitExample::oit_output_fs =
     "    vec4 color = color_ambient * color_diffuse + diffuse * color_diffuse * light_color;\n"
 
     "    // Equaltion 9\n"
-    "    float minRight = 0.03 / (1e-5 + pow(abs(gl_FragCoord.w), 4.0));\n"
+    "    float minRight = 0.03 / (1e-5 + pow(abs(1.0 / gl_FragCoord.w) / 200.0, 4.0));\n"
     "    float weight = color.a * max(1e-2, min(3e3, minRight));\n"
     "\n"
-    "    accum = vec4( color.rgb * color.a, color.a ) * weight;\n"
+    "    accum = vec4(color.rgb * color.a, color.a) * weight;\n"
     "    reveal = color.a;\n"
     "}\n";
 
@@ -83,7 +83,7 @@ const std::string WeightBlendedOitExample::fullscreen_quad_vs =
     "    gl_Position = vec4(position.xyz, 1.0);\n"
     "}\n";
 
-const std::string WeightBlendedOitExample::oit_overlay_fs =
+const std::string WeightBlendedOitExample::oit_quad_fs =
     "#version 430 core\n"
     "\n"
     "layout (location = 0) out vec4 frag_col;\n"

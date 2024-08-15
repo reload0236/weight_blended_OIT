@@ -13,7 +13,7 @@ bool SceneCreator::CreateOpaqueObjects(std::vector<std::shared_ptr<VBObjectExt>>
     std::random_device rd; // 用于获取随机种子
     std::mt19937 gen(rd()); // 以random_device()作为种子的Mersenne Twister生成器
     // 创建一个在[0.0, 1.0)区间内均匀分布的随机数分布
-    std::uniform_real_distribution<> dis(0.0, 1.0);
+    std::uniform_real_distribution<> colorDis(0.0, 1.0);
 
     const float STEP = 50;
     const float LENGTH = 400;
@@ -26,7 +26,7 @@ bool SceneCreator::CreateOpaqueObjects(std::vector<std::shared_ptr<VBObjectExt>>
         for (float x = .0; x < LENGTH; x += STEP) {
             std::shared_ptr<VBObjectExt> obj(new VBObjectExt());
             obj->LoadFromVBM("media/torus.vbm", 0, 1, 2);
-            obj->SetColor(dis(gen), dis(gen), dis(gen), 1.0);
+            obj->SetColor(colorDis(gen), colorDis(gen), colorDis(gen), 1.0);
             obj->Translate(startX + x, YOFFSET, startZ + z);
             out.push_back(obj);
         }
@@ -42,8 +42,10 @@ bool SceneCreator::CreateTranslucentObjects(std::vector<std::shared_ptr<VBObject
     // 创建一个随机数引擎
     std::random_device rd; // 用于获取随机种子
     std::mt19937 gen(rd()); // 以random_device()作为种子的Mersenne Twister生成器
-    // 创建一个在[0.0, 1.0)区间内均匀分布的随机数分布
-    std::uniform_real_distribution<> dis(0.0, 1.0);
+    // color distribution
+    std::uniform_real_distribution<> colorDis(0.0, 1.0);
+    // rotation distribution
+    std::uniform_real_distribution<> rotationDis(0.0, 360.0);
 
     const float STEP = 50;
     const float LENGTH = 400;
@@ -56,7 +58,8 @@ bool SceneCreator::CreateTranslucentObjects(std::vector<std::shared_ptr<VBObject
         for (float x = .0; x < LENGTH; x += STEP) {
             std::shared_ptr<VBObjectExt> obj(new VBObjectExt());
             obj->LoadFromVBM("media/torus.vbm", 0, 1, 2);
-            obj->SetColor(dis(gen), dis(gen), dis(gen), dis(gen));
+            obj->SetColor(colorDis(gen), colorDis(gen), colorDis(gen), colorDis(gen));
+            obj->Rotate(rotationDis(gen), 1.0f, .0f, .0f);
             obj->Translate(startX + x, YOFFSET, startZ + z);
             out.push_back(obj);
         }

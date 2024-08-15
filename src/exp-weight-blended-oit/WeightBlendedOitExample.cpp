@@ -88,7 +88,7 @@ bool WeightBlendedOitExample::CreateOITOverlayProgram()
 {
     oit_overlay_prog = glCreateProgram();
     vglAttachShaderSource(oit_overlay_prog, GL_VERTEX_SHADER, fullscreen_quad_vs.c_str());
-    vglAttachShaderSource(oit_overlay_prog, GL_FRAGMENT_SHADER, oit_overlay_fs.c_str());
+    vglAttachShaderSource(oit_overlay_prog, GL_FRAGMENT_SHADER, oit_quad_fs.c_str());
 
     glLinkProgram(oit_overlay_prog);
 
@@ -191,11 +191,6 @@ bool WeightBlendedOitExample::CreateOITFrameBuffer()
         reveal_texture = 0;
     }
 
-    if (rbo_depth) {
-        glDeleteRenderbuffers(1, &rbo_depth);
-        rbo_depth = 0;
-    }
-
     glGenFramebuffers(1, &oit_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, oit_fbo );
 
@@ -239,27 +234,31 @@ bool WeightBlendedOitExample::CreateOITFrameBuffer()
 
 void WeightBlendedOitExample::Display(bool auto_redraw)
 {
-    float time = float(app_time() & 0xFFFF) / float(0xFFFF);
+    static unsigned last_time = 0;
+    
+    unsigned cur_time = app_time();
+    unsigned deltaTime = cur_time - last_time;
 
     view_matrix = vmath::lookat(eye_pos, focal_point, view_up);
-    proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, 1000.0f);
+    proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, 500.0f);
 
-    RenderOpaque(time * 0.5f);
+    RenderOpaque(deltaTime * 0.001f);
 
     if (transparent_active) {
         if (oit_active) {
-            RenderWeightBlendedOIT(time * 0.25f);
-            RenderOITQuad(time * 0.25f);
-        }
-        else {
+            RenderWeightBlendedOIT(deltaTime * 0.001f);
+            RenderOITQuad(deltaTime * 0.001f);
+        } else {
             SortBackToFront(translucent_objects);
-            RenderTranslucent(time * 0.25f);
+            RenderTranslucent(deltaTime * 0.001f);
         }
     }
 
     RenderViewQuad();
 
     base::Display();
+    
+    last_time = cur_time;
 }
 
 void WeightBlendedOitExample::RenderOpaque(float time)
@@ -284,8 +283,7 @@ void WeightBlendedOitExample::RenderOpaque(float time)
     glEnable(GL_DEPTH_TEST);
 
     for (auto& object : opaque_objects) {
-        object->Rotate(-987.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
-        object->Rotate(-1234.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        object->Rotate(-10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
 
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
@@ -325,8 +323,8 @@ void WeightBlendedOitExample::RenderTranslucent(float time)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (auto& object : translucent_objects) {
-        object->Rotate(987.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
-        object->Rotate(1234.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
+        object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
 
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
@@ -345,11 +343,11 @@ void WeightBlendedOitExample::RenderTranslucent(float time)
 
 void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
 {
-    // Copy depth buffer to oit frame buffer depth. Note this is the most serious performance hit.
-    //glBindFramebuffer(GL_READ_FRAMEBUFFER, 0 );
-    //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, oit_fbo);
-    //glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_width, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    // Note the depth buffer is shared with main_fbo to make correct depth testing.
     glBindFramebuffer(GL_FRAMEBUFFER, oit_fbo);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable( GL_BLEND );
     glViewport(0, 0, window_width, window_height);
 
     // clear accum texture.
@@ -364,11 +362,6 @@ void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
     glBlendEquationi( 1, GL_FUNC_ADD );
     glBlendFunci( 1, GL_ZERO, GL_ONE_MINUS_SRC_COLOR );
 
-    glDepthMask(GL_FALSE);
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable( GL_BLEND );
-
     glUseProgram(oit_output_prog);
     
     mv_mat_loc = glGetUniformLocation(translucent_prog, "model_matrix");
@@ -381,8 +374,8 @@ void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
 
     int count = 0;
     for (auto& object : translucent_objects) {
-        object->Rotate(987.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
-        object->Rotate(1234.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
+        object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
 
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
@@ -566,7 +559,23 @@ void WeightBlendedOitExample::HandleCameraTransform(int key)
                 focal_point += offset;
             }
             break;
-
+        // Up
+        case GLFW_KEY_Q:
+            {
+                vmath::vecN<float, 3> offset = view_up * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+        // Down
+        case GLFW_KEY_Z:
+            {
+                vmath::vecN<float, 3> offset = -view_up * camera_move_speed;
+                eye_pos += offset;
+                focal_point += offset;
+            }
+            break;
+        // Rotate to left
         case GLFW_KEY_LEFT:
             {
                 vmath::vecN<float, 3> front = focal_point - eye_pos;
@@ -583,7 +592,7 @@ void WeightBlendedOitExample::HandleCameraTransform(int key)
                 focal_point[2] = eye_pos[2] + result[2];
             }
             break;
-
+        // Rotate to right
         case GLFW_KEY_RIGHT:
             {
                 vmath::vecN<float, 3> front = focal_point - eye_pos;

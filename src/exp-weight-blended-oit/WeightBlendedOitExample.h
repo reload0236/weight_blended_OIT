@@ -27,6 +27,7 @@ public:
     bool CreateOITFrameBuffer();
 
     void RenderOpaque(float time);
+    /// Render translucent in triditional painter's algorithom.
     void RenderTranslucent(float time);
     void RenderWeightBlendedOIT(float time);
 
@@ -51,7 +52,6 @@ private:
     GLuint oit_fbo{};
     GLuint accum_texture{};
     GLuint reveal_texture{};
-    GLuint rbo_depth{};
 
     /// Opaque objects rendering program.
     GLuint opaque_prog{};
@@ -100,7 +100,7 @@ private:
     static const std::string oit_output_fs;
 
     static const std::string fullscreen_quad_vs;
-    static const std::string oit_overlay_fs;
+    static const std::string oit_quad_fs;
 
     static const std::string render_view_fs;
 

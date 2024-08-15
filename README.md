@@ -1,9 +1,9 @@
 Weighted Blended Order-Independent Transparent
 ============================
 
-This is the code implementation based on papper "Weighted Blended Order-Independent Transparency" by Morgan McGuire and Louis Bavoil.
+This is the code implementation based on "https://jcgt.org/published/0002/02/09/".
 
-And the source coude is based on the libs of "the OpenGL Programming Guide (Red Book), 9th Edition".
+And the source code is based on the libs of "The OpenGL Programming Guide (Red Book), 9th Edition".
 
 Building
 --------
