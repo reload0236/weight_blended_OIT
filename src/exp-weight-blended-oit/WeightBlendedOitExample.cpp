@@ -140,7 +140,7 @@ bool WeightBlendedOitExample::CreateMainFrameBuffer()
     glGenFramebuffers(1, &main_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, main_fbo);
 
-    // ´´½¨²¢¸½¼ÓÑÕÉ«ÎÆÀí
+    // åˆ›å»ºå¹¶é™„åŠ é¢œè‰²çº¹ç†
     glGenTextures(1, &main_color_texture);
     glBindTexture(GL_TEXTURE_2D, main_color_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -148,7 +148,7 @@ bool WeightBlendedOitExample::CreateMainFrameBuffer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, main_color_texture, 0);
 
-    // ´´½¨²¢¸½¼ÓÉî¶ÈÎÆÀí£¨¿ÉÑ¡£¬È¡¾öÓÚÊÇ·ñĞèÒªÉî¶ÈĞÅÏ¢£©
+    // åˆ›å»ºå¹¶é™„åŠ æ·±åº¦çº¹ç†ï¼ˆå¯é€‰ï¼Œå–å†³äºæ˜¯å¦éœ€è¦æ·±åº¦ä¿¡æ¯ï¼‰
     //GLuint depthTexture;
     //glGenTextures(1, &depthTexture);
     //glBindTexture(GL_TEXTURE_2D, depthTexture);
