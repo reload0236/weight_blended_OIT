@@ -67,14 +67,6 @@ private:
     GLuint fullscreen_quad_vao{};
     GLuint fullscreen_quad_vbo{};
 
-    // Uniform locations
-    GLint mv_mat_loc{};
-    GLint prj_mat_loc{};
-    GLint col_amb_loc{};
-    GLint col_diff_loc{};
-    GLint col_spec_loc{};
-    GLint z_scalar_loc{};
-
     vmath::mat4 view_matrix;
     vmath::mat4 proj_matrix;
 
@@ -83,7 +75,8 @@ private:
 
     SceneCreator scene_creator;
 
-    float far_plane_distance = 1000.0;
+    float near_dist = .1f;
+    float far_dist = 1000.0f;
     vmath::vecN<float, 3> eye_pos;
     vmath::vecN<float, 3> focal_point;
     vmath::vecN<float, 3> view_up;
@@ -95,6 +88,10 @@ private:
 
     bool oit_active = true;
     bool transparent_active = true;
+
+    unsigned last_time = 0;
+    bool paused = false;
+    bool force_redraw = false;
 
     static const std::string render_vs;
     static const std::string render_fs;

@@ -56,6 +56,7 @@ const std::string WeightBlendedOitExample::oit_output_fs =
     "uniform vec3 light_direction = vec3(-1.0, -1.0, -1.0);\n"
     "uniform vec4 light_color = vec4(.8, .8, .8, 1.0);\n"
     "uniform float z_scalar;\n"
+    "uniform vec3 view_range; // .x for near, .y for far, .z for 500 / |far - near|\n"
     "\n"
     "void main(void)\n"
     "{\n"
@@ -64,7 +65,8 @@ const std::string WeightBlendedOitExample::oit_output_fs =
     "    vec4 color = color_ambient * color_diffuse + diffuse * color_diffuse * light_color;\n"
 
     "    // Equaltion 9\n"
-    "    float minRight = 0.03 / (1e-5 + pow(abs(1.0 / gl_FragCoord.w * z_scalar) / 200.0, 4.0));\n"
+    "    float mappedAbsZ = (abs(1.0 / gl_FragCoord.w) - view_range.x) * view_range.z; \n"
+    "    float minRight = 0.03 / (1e-5 + pow(mappedAbsZ / 200.0, 4.0));\n"
     "    float weight = color.a * max(1e-2, min(3e3, minRight));\n"
     "\n"
     "    accum = vec4(color.rgb * color.a, color.a) * weight;\n"

@@ -234,13 +234,15 @@ bool WeightBlendedOitExample::CreateOITFrameBuffer()
 
 void WeightBlendedOitExample::Display(bool auto_redraw)
 {
-    static unsigned last_time = 0;
-    
     unsigned cur_time = app_time();
     unsigned deltaTime = cur_time - last_time;
 
+    if (paused && !force_redraw) {
+        return;
+    }
+
     view_matrix = vmath::lookat(eye_pos, focal_point, view_up);
-    proj_matrix = vmath::perspective(60.0f, 1.333f, 0.1f, far_plane_distance);
+    proj_matrix = vmath::perspective(60.0f, 1.333f, near_dist, far_dist);
 
     RenderOpaque(deltaTime * 0.001f);
 
@@ -272,11 +274,9 @@ void WeightBlendedOitExample::RenderOpaque(float time)
 
     glUseProgram(opaque_prog);
 
-    mv_mat_loc = glGetUniformLocation(opaque_prog, "model_matrix");
-    prj_mat_loc = glGetUniformLocation(opaque_prog, "proj_matrix");
-    col_amb_loc = glGetUniformLocation(opaque_prog, "color_ambient");
-    col_diff_loc = glGetUniformLocation(opaque_prog, "color_diffuse");
-    col_spec_loc = glGetUniformLocation(opaque_prog, "color_specular");
+    GLint mv_mat_loc = glGetUniformLocation(opaque_prog, "model_matrix");
+    GLint prj_mat_loc = glGetUniformLocation(opaque_prog, "proj_matrix");
+    GLint col_diff_loc = glGetUniformLocation(opaque_prog, "color_diffuse");
 
     glUniformMatrix4fv(prj_mat_loc, 1, GL_FALSE, proj_matrix);
 
@@ -308,11 +308,9 @@ void WeightBlendedOitExample::RenderTranslucent(float time)
 
     glUseProgram(translucent_prog);
 
-    mv_mat_loc = glGetUniformLocation(translucent_prog, "model_matrix");
-    prj_mat_loc = glGetUniformLocation(translucent_prog, "proj_matrix");
-    col_amb_loc = glGetUniformLocation(translucent_prog, "color_ambient");
-    col_diff_loc = glGetUniformLocation(translucent_prog, "color_diffuse");
-    col_spec_loc = glGetUniformLocation(translucent_prog, "color_specular");
+    GLint mv_mat_loc = glGetUniformLocation(translucent_prog, "model_matrix");
+    GLint prj_mat_loc = glGetUniformLocation(translucent_prog, "proj_matrix");
+    GLint col_diff_loc = glGetUniformLocation(translucent_prog, "color_diffuse");
 
     glUniformMatrix4fv(prj_mat_loc, 1, GL_FALSE, proj_matrix);
 
@@ -364,16 +362,15 @@ void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
 
     glUseProgram(oit_output_prog);
     
-    mv_mat_loc = glGetUniformLocation(oit_output_prog, "model_matrix");
-    prj_mat_loc = glGetUniformLocation(oit_output_prog, "proj_matrix");
-    col_amb_loc = glGetUniformLocation(oit_output_prog, "color_ambient");
-    col_diff_loc = glGetUniformLocation(oit_output_prog, "color_diffuse");
-    z_scalar_loc = glGetUniformLocation(oit_output_prog, "z_scalar");
+    GLint mv_mat_loc = glGetUniformLocation(oit_output_prog, "model_matrix");
+    GLint prj_mat_loc = glGetUniformLocation(oit_output_prog, "proj_matrix");
+    GLint col_diff_loc = glGetUniformLocation(oit_output_prog, "color_diffuse");
+    GLint view_range_loc = glGetUniformLocation(oit_output_prog, "view_range");
 
     glUniformMatrix4fv(prj_mat_loc, 1, GL_FALSE, proj_matrix);
     // The equation from McGuire & Bavoil is tuned for z range 0.1 <= |z| <= 500,
-    // so we should have a scalar to adapt that.
-    glUniform1f(z_scalar_loc, 500.0 / far_plane_distance);
+    // so we should do a mapping job.
+    glUniform3f(view_range_loc, near_dist, far_dist, 500.0f / std::abs(far_dist - near_dist));
 
     int count = 0;
     for (auto& object : translucent_objects) {
@@ -493,8 +490,15 @@ void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
 {
     if (action == GLFW_PRESS) {
         switch (key) {
-            case GLFW_KEY_SPACE:
+            case GLFW_KEY_O:
                 oit_active = !oit_active;
+                if (paused) {
+                    // reset last_time
+                    last_time = app_time();
+                    force_redraw = true;
+                    Display(false);
+                    force_redraw = false;
+                }
                 break;
             case GLFW_KEY_T:
                 transparent_active = !transparent_active;
@@ -504,6 +508,13 @@ void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
             case GLFW_KEY_A:
                 break;
             case GLFW_KEY_L:
+                break;
+            case GLFW_KEY_SPACE:
+                paused = !paused;
+                if (!paused) {
+                    // reset last_time
+                    last_time = app_time();
+                }
                 break;
             default:
                 break;
