@@ -237,10 +237,6 @@ void WeightBlendedOitExample::Display(bool auto_redraw)
     unsigned cur_time = app_time();
     unsigned deltaTime = cur_time - last_time;
 
-    if (paused && !force_redraw) {
-        return;
-    }
-
     view_matrix = vmath::lookat(eye_pos, focal_point, view_up);
     proj_matrix = vmath::perspective(60.0f, 1.333f, near_dist, far_dist);
 
@@ -283,7 +279,9 @@ void WeightBlendedOitExample::RenderOpaque(float time)
     glEnable(GL_DEPTH_TEST);
 
     for (auto& object : opaque_objects) {
-        object->Rotate(-10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        if (!pauseRotation) {
+            object->Rotate(-10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        }
 
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
@@ -321,8 +319,10 @@ void WeightBlendedOitExample::RenderTranslucent(float time)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (auto& object : translucent_objects) {
-        object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
-        object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        if (!pauseRotation) {
+            object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
+            object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        }
 
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
@@ -374,9 +374,10 @@ void WeightBlendedOitExample::RenderWeightBlendedOIT(float time)
 
     int count = 0;
     for (auto& object : translucent_objects) {
-        object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
-        object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
-
+        if (!pauseRotation) {
+            object->Rotate(5.0f * time * 3.14159f, 0.0f, 0.0f, 1.0f);
+            object->Rotate(10.0f * time * 3.14159f, 1.0f, 0.0f, 0.0f);
+        }
         const vmath::mat4& modelMatrix = object->GetTransform();
         vmath::mat4 mv_matrix = view_matrix * modelMatrix;
 
@@ -492,12 +493,10 @@ void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
         switch (key) {
             case GLFW_KEY_O:
                 oit_active = !oit_active;
-                if (paused) {
+                if (pauseRotation) {
                     // reset last_time
                     last_time = app_time();
-                    force_redraw = true;
                     Display(false);
-                    force_redraw = false;
                 }
                 break;
             case GLFW_KEY_T:
@@ -510,8 +509,8 @@ void WeightBlendedOitExample::OnKey(int key, int scancode, int action, int mods)
             case GLFW_KEY_L:
                 break;
             case GLFW_KEY_SPACE:
-                paused = !paused;
-                if (!paused) {
+                pauseRotation = !pauseRotation;
+                if (!pauseRotation) {
                     // reset last_time
                     last_time = app_time();
                 }

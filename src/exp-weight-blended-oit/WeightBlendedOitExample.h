@@ -90,8 +90,7 @@ private:
     bool transparent_active = true;
 
     unsigned last_time = 0;
-    bool paused = false;
-    bool force_redraw = false;
+    bool pauseRotation = false;
 
     static const std::string render_vs;
     static const std::string render_fs;
