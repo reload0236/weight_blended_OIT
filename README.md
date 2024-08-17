@@ -1,9 +1,12 @@
+
 Weighted Blended Order-Independent Transparent
 ============================
 
 This is the code implementation based on "https://jcgt.org/published/0002/02/09/".
 
 And the source code is based on the libs of "The OpenGL Programming Guide (Red Book), 9th Edition".
+
+<img src='images/demo_display.png'>
 
 Building
 --------

@@ -99,8 +99,8 @@ const std::string WeightBlendedOitExample::oit_quad_fs =
     "{\n"
     "   vec4 accum = texture(accum_texture, uv.xy);\n"
     "   float revealage = texture(reveal_texture, uv.xy).r;\n"
-    "   vec3 avg_col = accum.rgb / clamp( accum.a, 1e-4, 5e4 );\n"
-    "   frag_col = vec4( avg_col, revealage );\n"
+    "   vec3 avg_col = accum.rgb / clamp(accum.a, 1e-4, 5e4);\n"
+    "   frag_col = vec4(avg_col, revealage);\n"
     "}\n";
 
 const std::string WeightBlendedOitExample::render_view_fs = 
